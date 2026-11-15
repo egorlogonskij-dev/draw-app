@@ -25,6 +25,7 @@ canvas{background:#101014;border-radius:12px;touch-action:none;aspect-ratio:9/19
 <div id="bar">
 <input id="col" type="color" value="#ff4d6d">
 <input id="wid" type="range" min="2" max="30" value="6">
+<button id="txt">Текст: выкл</button>
 <button id="clr">Очистить</button>
 <button id="out">Выйти</button>
 </div>
@@ -50,28 +51,3 @@ $("out").onclick=()=>signOut(auth);
 let started=false;
 onAuthStateChanged(auth,u=>{
 $("login").style.display=u?"none":"flex";
-$("app").style.display=u?"flex":"none";
-if(u&&!started){started=true;start()}});
-function start(){
-const cv=$("c"),ctx=cv.getContext("2d");let segs=[];
-function draw(s){const W=cv.width,H=cv.height;
-ctx.strokeStyle=s.c;ctx.lineWidth=s.w*W;ctx.lineCap="round";
-ctx.beginPath();ctx.moveTo(s.x0*W,s.y0*H);ctx.lineTo(s.x1*W,s.y1*H);ctx.stroke()}
-function redraw(){ctx.clearRect(0,0,cv.width,cv.height);segs.forEach(draw)}
-function size(){const r=cv.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;redraw()}
-addEventListener("resize",size);size();
-onChildAdded(ref(db,"strokes"),s=>{segs.push(s.val());draw(s.val())});
-onChildRemoved(ref(db,"strokes"),()=>{segs=[];redraw()});
-let last=null;
-const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
-cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);last=pos(e)});
-cv.addEventListener("pointermove",e=>{
-if(!last)return;const[x,y]=pos(e);
-if(Math.hypot(x-last[0],y-last[1])<0.004)return;
-push(ref(db,"strokes"),{x0:last[0],y0:last[1],x1:x,y1:y,c:$("col").value,w:$("wid").value/400});
-last=[x,y]});
-cv.addEventListener("pointerup",()=>{last=null});
-cv.addEventListener("pointercancel",()=>{last=null});
-$("clr").onclick=()=>remove(ref(db,"strokes"));
-}
-</script></body></html>
