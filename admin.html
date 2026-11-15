@@ -1,114 +1,77 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Рисовать</title>
 <style>
-  :root{color-scheme:dark}
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#17171c;color:#e8e8ee;font:16px -apple-system,system-ui,sans-serif}
-  #login{max-width:320px;margin:20vh auto;padding:20px;display:flex;flex-direction:column;gap:12px}
-  input,button{font:inherit;padding:12px;border-radius:10px;border:1px solid #3a3a46;background:#22222a;color:inherit}
-  button{background:#e8e8ee;color:#17171c;border:0;font-weight:600}
-  #err{color:#ff8a8a;min-height:1.2em;font-size:14px}
-  #app{display:none;height:100%;flex-direction:column}
-  #bar{display:flex;gap:10px;align-items:center;padding:10px;flex-wrap:wrap}
-  #bar button{padding:8px 14px;background:#22222a;color:inherit;border:1px solid #3a3a46}
-  #bar input[type=color]{padding:0;width:44px;height:38px}
-  #bar input[type=range]{padding:0;width:110px}
-  #stage{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;padding:0 10px 10px}
-  canvas{background:#101014;border-radius:12px;touch-action:none;max-width:100%;max-height:100%;aspect-ratio:9/19.5;height:100%}
-</style>
-</head>
-<body>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#17171c;color:#eee;font:16px sans-serif}
+#login{max-width:320px;margin:20vh auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+input,button{font:inherit;padding:12px;border-radius:10px;border:1px solid #444;background:#22222a;color:#eee}
+button{background:#eee;color:#111;border:0;font-weight:600}
+#err{color:#ff8a8a;min-height:1.2em}
+#app{display:none;height:100%;flex-direction:column}
+#bar{display:flex;gap:10px;align-items:center;padding:10px;flex-wrap:wrap}
+#stage{flex:1;min-height:0;display:flex;justify-content:center;padding:0 10px 10px}
+canvas{background:#101014;border-radius:12px;touch-action:none;aspect-ratio:9/19.5;height:100%;max-width:100%}
+</style></head><body>
 <form id="login">
-  <h2 style="margin:0">Вход</h2>
-  <input id="em" type="email" placeholder="Email" autocomplete="username" required>
-  <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password" required>
-  <button type="submit">Войти</button>
-  <div id="err"></div>
+<h2>Вход</h2>
+<input id="em" type="email" placeholder="Email" required>
+<input id="pw" type="password" placeholder="Пароль" required>
+<button type="submit">Войти</button>
+<div id="err"></div>
 </form>
-
 <div id="app">
-  <div id="bar">
-    <input id="col" type="color" value="#ff4d6d">
-    <input id="wid" type="range" min="2" max="30" value="6">
-    <button id="clr">Очистить</button>
-    <button id="out">Выйти</button>
-    <span id="vis" style="font-size:14px;color:#9a9aa8"></span>
-  </div>
-  <div id="stage"><canvas id="c"></canvas></div>
+<div id="bar">
+<input id="col" type="color" value="#ff4d6d">
+<input id="wid" type="range" min="2" max="30" value="6">
+<button id="clr">Очистить</button>
+<button id="out">Выйти</button>
 </div>
-
+<div id="stage"><canvas id="c"></canvas></div>
+</div>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, push, remove, onChildAdded, onChildRemoved, query, limitToLast }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyDoRF_F_wNBBR6U6Zm0aR4chPeOI-ptk8k",
-  authDomain: "draw-app-7f40f.firebaseapp.com",
-  databaseURL: "https://draw-app-7f40f-default-rtdb.firebaseio.com",
-  projectId: "draw-app-7f40f",
-  storageBucket: "draw-app-7f40f.firebasestorage.app",
-  messagingSenderId: "832188314813",
-  appId: "1:832188314813:web:aec4e646a135bfe70373d4"
-});
-const auth = getAuth(app), db = getDatabase(app);
-const $ = id => document.getElementById(id);
-
-$("login").addEventListener("submit", async e => {
-  e.preventDefault(); $("err").textContent = "";
-  try { await signInWithEmailAndPassword(auth, $("em").value, $("pw").value); }
-  catch (er) { $("err").textContent = er.code || String(er); }
-});
-$("out").onclick = () => signOut(auth);
-
-let started = false;
-onAuthStateChanged(auth, user => {
-  $("login").style.display = user ? "none" : "flex";
-  $("app").style.display = user ? "flex" : "none";
-  if (user && !started) { started = true; start(); }
-});
-
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getDatabase,ref,push,remove,onChildAdded,onChildRemoved} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+const app=initializeApp({
+apiKey:"AIzaSyDoRF_F_wNBBR6U6Zm0aR4chPeOI-ptk8k",
+authDomain:"draw-app-7f40f.firebaseapp.com",
+databaseURL:"https://draw-app-7f40f-default-rtdb.firebaseio.com",
+projectId:"draw-app-7f40f",
+appId:"1:832188314813:web:aec4e646a135bfe70373d4"});
+const auth=getAuth(app),db=getDatabase(app);
+const $=id=>document.getElementById(id);
+$("login").addEventListener("submit",async e=>{
+e.preventDefault();$("err").textContent="";
+try{await signInWithEmailAndPassword(auth,$("em").value,$("pw").value)}
+catch(er){$("err").textContent=er.code||String(er)}});
+$("out").onclick=()=>signOut(auth);
+let started=false;
+onAuthStateChanged(auth,u=>{
+$("login").style.display=u?"none":"flex";
+$("app").style.display=u?"flex":"none";
+if(u&&!started){started=true;start()}});
 function start(){
-  const cv = $("c"), ctx = cv.getContext("2d");
-  let segs = [];
-  function size(){
-    const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
-    cv.width = r.width * d; cv.height = r.height * d; redraw();
-  }
-  function drawSeg(s){
-    const W = cv.width, H = cv.height;
-    ctx.strokeStyle = s.c; ctx.lineWidth = s.w * W; ctx.lineCap = "round"; ctx.lineJoin = "round";
-    ctx.beginPath(); ctx.moveTo(s.x0*W, s.y0*H); ctx.lineTo(s.x1*W, s.y1*H); ctx.stroke();
-  }
-  function redraw(){ ctx.clearRect(0,0,cv.width,cv.height); segs.forEach(drawSeg); }
-  addEventListener("resize", size); size();
-
-  onChildAdded(ref(db,"strokes"), s => { segs.push(s.val()); drawSeg(s.val()); });
-  onChildRemoved(ref(db,"strokes"), () => { segs = []; redraw(); });
-  onChildAdded(query(ref(db,"visits"), limitToLast(1)), s => {
-    const t = s.val().t; $("vis").textContent = t ? "Последний вход: " + new Date(t).toLocaleTimeString() : "";
-  });
-
-  let last = null;
-  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX-r.left)/r.width, (e.clientY-r.top)/r.height]; };
-  cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); last = pos(e); });
-  cv.addEventListener("pointermove", e => {
-    if (!last) return;
-    const [x,y] = pos(e);
-    if (Math.hypot(x-last[0], y-last[1]) < 0.004) return;
-    push(ref(db,"strokes"), { x0:last[0], y0:last[1], x1:x, y1:y, c:$("col").value, w:$("wid").value/400 });
-    last = [x,y];
-  });
-  const stop = () => { last = null; };
-  cv.addEventListener("pointerup", stop); cv.addEventListener("pointercancel", stop);
-  $("clr").onclick = () => remove(ref(db,"strokes"));
+const cv=$("c"),ctx=cv.getContext("2d");let segs=[];
+function draw(s){const W=cv.width,H=cv.height;
+ctx.strokeStyle=s.c;ctx.lineWidth=s.w*W;ctx.lineCap="round";
+ctx.beginPath();ctx.moveTo(s.x0*W,s.y0*H);ctx.lineTo(s.x1*W,s.y1*H);ctx.stroke()}
+function redraw(){ctx.clearRect(0,0,cv.width,cv.height);segs.forEach(draw)}
+function size(){const r=cv.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;redraw()}
+addEventListener("resize",size);size();
+onChildAdded(ref(db,"strokes"),s=>{segs.push(s.val());draw(s.val())});
+onChildRemoved(ref(db,"strokes"),()=>{segs=[];redraw()});
+let last=null;
+const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
+cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);last=pos(e)});
+cv.addEventListener("pointermove",e=>{
+if(!last)return;const[x,y]=pos(e);
+if(Math.hypot(x-last[0],y-last[1])<0.004)return;
+push(ref(db,"strokes"),{x0:last[0],y0:last[1],x1:x,y1:y,c:$("col").value,w:$("wid").value/400});
+last=[x,y]});
+cv.addEventListener("pointerup",()=>{last=null});
+cv.addEventListener("pointercancel",()=>{last=null});
+$("clr").onclick=()=>remove(ref(db,"strokes"));
 }
-</script>
-</body>
-</html>
+</script></body></html>
