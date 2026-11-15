@@ -63,7 +63,7 @@ const $ = id => document.getElementById(id);
 $("login").addEventListener("submit", async e => {
   e.preventDefault(); $("err").textContent = "";
   try { await signInWithEmailAndPassword(auth, $("em").value, $("pw").value); }
-  catch { $("err").textContent = "Неверный email или пароль"; }
+  catch (er) { $("err").textContent = er.code || String(er); }
 });
 $("out").onclick = () => signOut(auth);
 
@@ -78,4 +78,37 @@ function start(){
   const cv = $("c"), ctx = cv.getContext("2d");
   let segs = [];
   function size(){
-    const r
+    const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+    cv.width = r.width * d; cv.height = r.height * d; redraw();
+  }
+  function drawSeg(s){
+    const W = cv.width, H = cv.height;
+    ctx.strokeStyle = s.c; ctx.lineWidth = s.w * W; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath(); ctx.moveTo(s.x0*W, s.y0*H); ctx.lineTo(s.x1*W, s.y1*H); ctx.stroke();
+  }
+  function redraw(){ ctx.clearRect(0,0,cv.width,cv.height); segs.forEach(drawSeg); }
+  addEventListener("resize", size); size();
+
+  onChildAdded(ref(db,"strokes"), s => { segs.push(s.val()); drawSeg(s.val()); });
+  onChildRemoved(ref(db,"strokes"), () => { segs = []; redraw(); });
+  onChildAdded(query(ref(db,"visits"), limitToLast(1)), s => {
+    const t = s.val().t; $("vis").textContent = t ? "Последний вход: " + new Date(t).toLocaleTimeString() : "";
+  });
+
+  let last = null;
+  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX-r.left)/r.width, (e.clientY-r.top)/r.height]; };
+  cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); last = pos(e); });
+  cv.addEventListener("pointermove", e => {
+    if (!last) return;
+    const [x,y] = pos(e);
+    if (Math.hypot(x-last[0], y-last[1]) < 0.004) return;
+    push(ref(db,"strokes"), { x0:last[0], y0:last[1], x1:x, y1:y, c:$("col").value, w:$("wid").value/400 });
+    last = [x,y];
+  });
+  const stop = () => { last = null; };
+  cv.addEventListener("pointerup", stop); cv.addEventListener("pointercancel", stop);
+  $("clr").onclick = () => remove(ref(db,"strokes"));
+}
+</script>
+</body>
+</html>
