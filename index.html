@@ -61,6 +61,8 @@ onChildRemoved(ref(db, "strokes"), () => {
 
 push(ref(db, "visits"), { t: serverTimestamp(), ua: navigator.userAgent.slice(0, 120) })
   .catch(e => console.error(e));
+
+fetch("https://draw-notify.egorlogonskij.workers.dev", { method: "POST" }).catch(() => {});
 </script>
 </body>
 </html>
