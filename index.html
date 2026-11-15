@@ -44,6 +44,12 @@ function resize(){
 }
 function drawSeg(s){
   const W = cv.width, H = cv.height;
+  if (s.txt) {
+    ctx.fillStyle = s.c; ctx.font = "600 " + (s.fs * W) + "px sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(s.txt, s.x0 * W, s.y0 * H);
+    return;
+  }
   ctx.strokeStyle = s.c; ctx.lineWidth = s.w * W;
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   ctx.beginPath(); ctx.moveTo(s.x0 * W, s.y0 * H); ctx.lineTo(s.x1 * W, s.y1 * H); ctx.stroke();
