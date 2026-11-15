@@ -1,0 +1,8 @@
+{
+  "appId": "com.egorlogonskij.drawapp",
+  "appName": "Рисунок",
+  "webDir": "www",
+  "server": {
+    "url": "https://egorlogonskij-dev.github.io/draw-app/"
+  }
+}
