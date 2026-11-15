@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Рисунок">
+<title>Рисунок</title>
+<style>
+  html,body{margin:0;height:100%;background:#101014;overflow:hidden}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+  #hint{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#6b6b78;font:16px -apple-system,system-ui,sans-serif;pointer-events:none;transition:opacity .6s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hint">Здесь появится рисунок</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded, onChildRemoved, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDoRF_F_wNBBR6U6Zm0aR4chPeOI-ptk8k",
+  authDomain: "draw-app-7f40f.firebaseapp.com",
+  databaseURL: "https://draw-app-7f40f-default-rtdb.firebaseio.com",
+  projectId: "draw-app-7f40f",
+  storageBucket: "draw-app-7f40f.firebasestorage.app",
+  messagingSenderId: "832188314813",
+  appId: "1:832188314813:web:aec4e646a135bfe70373d4"
+});
+const db = getDatabase(app);
+
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const hint = document.getElementById("hint");
+let segs = [];
+
+function resize(){
+  const r = devicePixelRatio || 1;
+  cv.width = innerWidth * r; cv.height = innerHeight * r;
+  redraw();
+}
+function drawSeg(s){
+  const W = cv.width, H = cv.height;
+  ctx.strokeStyle = s.c; ctx.lineWidth = s.w * W;
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(s.x0 * W, s.y0 * H); ctx.lineTo(s.x1 * W, s.y1 * H); ctx.stroke();
+}
+function redraw(){ ctx.clearRect(0,0,cv.width,cv.height); segs.forEach(drawSeg); }
+addEventListener("resize", resize);
+resize();
+
+onChildAdded(ref(db, "strokes"), snap => {
+  const s = snap.val(); segs.push(s); drawSeg(s); hint.style.opacity = 0;
+});
+onChildRemoved(ref(db, "strokes"), () => {
+  segs = []; redraw(); hint.style.opacity = 1;
+});
+
+push(ref(db, "visits"), { t: serverTimestamp(), ua: navigator.userAgent.slice(0, 120) })
+  .catch(e => console.error(e));
+</script>
+</body>
+</html>
