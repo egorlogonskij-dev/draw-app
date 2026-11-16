@@ -1,0 +1,39 @@
+name: Build iOS Admin
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Admin config
+        run: |
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.egorlogonskij.drawadmin",
+            "appName": "Рисовать",
+            "webDir": "www",
+            "server": {
+              "url": "https://egorlogonskij-dev.github.io/draw-app/admin.html"
+            }
+          }
+          EOF
+      - run: npm install
+      - run: npx cap add ios
+      - run: npx cap sync ios
+      - name: Build
+        run: |
+          cd ios/App
+          if [ -d App.xcworkspace ]; then TARGET="-workspace App.xcworkspace"; else TARGET="-project App.xcodeproj"; fi
+          xcodebuild $TARGET -scheme App -configuration Release -sdk iphoneos -derivedDataPath ../../build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Make ipa
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -r admin.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: admin-ipa
+          path: admin.ipa
